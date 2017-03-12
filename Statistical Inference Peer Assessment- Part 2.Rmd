@@ -1,0 +1,135 @@
+---
+title: 'Statistical Inference Assessment: Basic Inferential Data Analysis Exercise'
+author: "Jason Collins"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff = 60))
+```
+
+## Overview
+
+In this report I examine the `ToothGrowth` dataset, which contains measurements of the cells responsible for tooth growth in 60 guinea pigs. These guinea pigs were supplemented with vitamin C by orange juice or ascorbic acid (a form of vitamin C).
+
+There is a positive relationship between dose and tooth length, with increasing dose generally increasing length regardless of supplement type. However, the evidence for increasing length for doses above 1.0 delivered by orange juice is weak.
+
+## Data Summary
+
+First I load ggplot2, which is used in the data exploration.
+
+```{r}
+#load relevant libraries
+library(ggplot2)
+```
+
+I then loaded the data and viewed some summaries of the data.
+
+```{r}
+data("ToothGrowth")
+str(ToothGrowth)
+summary(ToothGrowth)
+unique(ToothGrowth$dose)
+```
+
+There are two methods by which the supplement is applied - orange juice and vitamin C. It can also be seen that there are only three levels of dose.
+
+A boxplot comparing length to dose for each or orange juice and vitamin C shows considerable difference in length with variation in dose, with a less clear effect of supplement type.
+
+```{r, fig.width=6, fig.height=3}
+g <- ggplot(ToothGrowth, aes(as.factor(dose), len)) + geom_boxplot()
+g + facet_grid(. ~ supp)
+```
+
+## Growth v Dose
+
+For the first set of analysis, I examine the relationship between dose length within the two supplement types. I ran two tests within each supplement type, the first comparing a dose of 0.5 to a dose of 1.0, and the second a dose of 1.0 to a dose of 2.0. Comparison of a dose of 0.5 to 2.0 is redundant given the results of the other tests. Full results of this and later tests are contained in the Appendix.
+
+####Varying dose of orange juice supplement
+
+```{r}
+#Select orange juice entries
+OJ <- subset(ToothGrowth, supp == "OJ")
+
+#t-test for doses of 0.5 and 1.0
+OJt1 <- t.test(OJ$len[OJ$dose == 1.0], OJ$len[OJ$dose == 0.5], paired = FALSE)
+OJt1$p.value; OJt1$conf.int[1:2]
+
+#t-test for doses of 1.0 and 2.0
+OJt2 <- t.test(OJ$len[OJ$dose == 2.0], OJ$len[OJ$dose == 1.0], paired = FALSE)
+OJt2$p.value; OJt2$conf.int[1:2]
+```
+
+There is clearly a significant difference in length between the dose of 0.5 and 1.0, with a p-value of `r format(OJt1$p.value, digits = 3, scientific = TRUE)`, with a higher dose resulting in increased length. The relationship is less clear for a dose between 1.0 and 2.0, with a p-value of `r signif(OJt2$p.value, 3)`. While below 0.05, in the context of the multiple comparisons, a Bonferroni correction would make it no longer significant.
+
+####Varying dose of vitamin C supplement
+
+```{r}
+#Select vitamin C entries
+VC <- subset(ToothGrowth, supp == "VC")
+
+#t-test for doses of 0.5 and 1.0
+VCt1 <- t.test(VC$len[VC$dose == 1.0], VC$len[VC$dose == 0.5], paired = FALSE)
+VCt1$p.value; VCt1$conf.int[1:2]
+
+#t-test for doses of 1.0 and 2.0
+VCt2 <- t.test(VC$len[VC$dose == 2.0], VC$len[VC$dose == 1.0], paired = FALSE)
+VCt2$p.value; VCt2$conf.int[1:2]
+```
+
+Both of the comparisons for the vitamin C supplement dosage demonstrate significant differences, with p-values of `r format(VCt1$p.value, digits = 3, scientific = TRUE)` and `r format(VCt2$p.value, digits = 3, scientific = TRUE)`. A higher dose results in longer tooth length.
+
+## Growth v Supplement type
+
+I then examined differences in the supplement type. There is little value in comparing across all doses aggregated together for the two supplement types, so I restricted the analysis to the highest dose levels.
+
+```{r}
+OJVC1 <- t.test(VC$len[VC$dose == 2.0], OJ$len[OJ$dose == 2.0], 
+                paired = FALSE, var.equal = FALSE)
+OJVC1$p.value; OJVC1$conf.int[1:2]
+```
+
+The comparison between the dose of 2.0 for each supplement type shows no significant difference, with a p-value of `r round(OJVC1$p.value, 3)`. I also compared the dose of 2.0 using vitamin C with a dose of 1.0.
+
+```{r}
+OJVC2 <- t.test(VC$len[VC$dose == 2.0], OJ$len[OJ$dose == 1.0], 
+                paired = FALSE, var.equal = FALSE)
+OJVC2$p.value; OJVC2$conf.int[1:2]
+```
+
+If there are cost or other negative consequences to higher dose, the ability to deliver a lower dose might be of value. The result of the comparison is that there is not a significant difference between the two, with a p-value of `r round(OJVC2$p.value, 3)`. However, this comparison could be underpowered.
+
+## Conclusion and assumptions
+
+There is a positive relationship between dose and tooth length, with increasing dose generally increasing length regardless of supplement type. However, the evidence for increasing length for doses above 1.0 delivered by orange juice is weak.
+
+This analysis is based on the assumption of random assignment of treatment and doses to the guinea pigs, a normal distribution of tooth lengths. I made no assumption about equality of variance between supplement and dose types.
+
+##Appendix
+
+####Varying dose of orange juice supplement
+
+```{r}
+OJt1
+OJt2
+```
+
+####Varying dose of vitamin C supplement
+
+```{r}
+VCt1
+VCt2
+```
+
+#### Growth v Supplement type
+
+```{r}
+OJVC1
+OJVC2
+```
+
+#### Session Info
+
+```{r}
+sessionInfo()
+```

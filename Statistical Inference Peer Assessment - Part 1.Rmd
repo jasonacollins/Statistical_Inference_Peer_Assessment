@@ -1,0 +1,86 @@
+---
+title: "Statistical Inference Assessment: Simulation Exercise"
+author: "Jason Collins"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff = 60))
+```
+
+## Overview
+
+In this report we compare the theoretical and sample mean and variance of 1000 simulations of 40 exponential distributions. The sample and theoretical means and variance are, as expected, close in value, with the distribution of the means approximating a normal distribution.
+
+## Simulations
+
+For the analysis in this report, I performed 1000 simulations of 40 exponential distributions with $\lambda$ = 0.2. 
+
+```{r}
+#set simulation parameters
+lambda <- 0.2
+n <- 40
+
+#simulate and place in 1000 x 40 matrix
+set.seed(20170301)
+simulation <- matrix(rexp(1000*n, rate = lambda), ncol = n)
+```
+
+## Sample Mean Versus Theoretical Mean
+
+In this section I compare the theoretical mean, being that we would expect based on the parameters used in the simulation, with the sample mean. The theoretical mean can be calculated from the simulation parameters.
+
+```{r}
+#theoretical mean
+tmean <- 1/lambda
+tmean
+
+#sample mean, based on mean of the mean of each simulation
+means <- rowMeans(simulation)
+smean <- mean(means)
+smean
+```
+
+The expected value of a sample from an exponential distribution with $\lambda$ = 0.2 is `r tmean`. The sample mean is `r round(smean, 4)`, close to the theoretical mean.
+
+This is  shown in the histogram at the bottom of this report, with the red line representing the sample mean (the center of the sample distribution) and the blue line the theoretical mean based on the parameters used in the simulation.
+
+## Sample Variance Versus Theoretical Variance
+
+In this section I compare the theoretical variance of the means of each simulation, being that we would expect based on the parameters used in the simulation, with the sample variance
+
+```{r}
+#theoretical standard deviation and variance
+tsd <- 1 / lambda / n^0.5
+tvar <- tsd^2
+tvar
+
+#sample variance
+svar <- var(means)
+svar
+```
+
+The theoretical variance of the averages of 40 exponentials drawn from an exponential distribution with $\lambda$ = 0.2 is `r tvar`. Across the 1000 simulations of 40 exponentials, the sample variance of the means is `r round(svar, 4)`, similar to the theoretical variance.
+
+## Distribution
+
+In this final section, we explore the normality of the distribution of the 1000 averages. We do this by plotting a histogram of the means and draw over it a normal distribution with the theoretical mean and variance.
+
+```{r}
+#histogram of means
+hist(means, breaks = 20, probability = TRUE)
+
+#add normal distribution and lines for theoretical and sample mean
+curve(dnorm(x, tmean, tsd), add=TRUE)
+abline(v = smean, col = "red", lwd = 2)
+abline(v = tmean, col = "blue", lwd = 2)
+```
+
+Visually there is considerable similarity between the distribution of the averages and the normal distribution based on the theoretical mean and variance. The sample mean is drawn on the plot as a red line, and the theoretical mean as a blue line.
+
+##Appendix
+
+```{r}
+sessionInfo()
+```
+
